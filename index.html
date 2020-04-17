@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+
+    <script src="https://unpkg.com/3d-force-graph"></script>
+  </head>
+
+  <body>
+    <div id="3d-graph"></div>
+
+    <script>
+      let iter = 1;
+      const n_iter = 20;
+      const step_ms = 4000;
+      const linkWidth = 8;
+      const linkOpacity = 0.3;
+      const nodeSize = 7;
+      const nodeColor = () => "rgba(255, 255, 0, 1.0)";
+      const linkColor = () => "rgba(0, 255, 255, 1.0)";
+      const zDist = 200;
+
+      // Initial state
+      let g = {
+        0: [1],
+        1: [2, 3],
+        2: [3],
+      };
+
+      // Current highest id
+      let w = 3;
+
+      // Returns an array of unique items.
+      const getUnique = () => [
+        ...new Set(
+          Object.entries(g)
+            .flat(2)
+            .map((n) => Number(n))
+        ),
+      ];
+
+      // Returns the graph object.
+      const getGraph = () => ({
+        nodes: getUnique().map((id) => ({ id })),
+        links: Object.entries(g)
+          .map(([source, targets]) =>
+            targets.map((target) => ({
+              source: Number(source),
+              target,
+            }))
+          )
+          .flat(),
+      });
+
+      // {{x, y}, {x, z}} → {{x, z}, {x, w}, {y, w}, {z, w}}
+      const step = () => {
+        const sources = Object.keys(g);
+
+        const r = {};
+        for (let i = 0; i < sources.length; i++) {
+          const x = sources[i];
+          const targets = g[x];
+          if (targets.length == 2) {
+            // Shift first node off targets.
+            const y = g[x].shift();
+            const z = g[x];
+
+            // Create new targets if new relationship.
+            if (r[x] == undefined) {
+              r[x] = [];
+            }
+            if (r[y] == undefined) {
+              r[y] = [];
+            }
+            if (r[z] == undefined) {
+              r[z] = [];
+            }
+
+            // Increment node ID
+            w++;
+
+            r[x].push(w);
+            r[y].push(w);
+            r[z].push(w);
+          }
+        }
+
+        // Apply new relationships.
+        const rSources = Object.keys(r);
+        for (let i = 0; i < rSources.length; i++) {
+          const source = rSources[i];
+          if (g[source] == undefined) {
+            g[source] = [];
+          }
+          for (let j = 0; j < r[source].length; j++) {
+            const target = r[source][j];
+            if (g[source].indexOf(target) === -1) {
+              g[source].push(target);
+            }
+          }
+        }
+
+        Graph.graphData(getGraph());
+        iter++;
+
+        if (iter <= n_iter) {
+          setTimeout(step, step_ms);
+        }
+      };
+
+      const Graph = ForceGraph3D()(document.getElementById("3d-graph"))
+        .enableNodeDrag(false)
+        .enableNavigationControls(false)
+        .showNavInfo(false)
+        .linkWidth(linkWidth)
+        .linkOpacity(linkOpacity)
+        .linkColor(linkColor)
+        .nodeRelSize(nodeSize)
+        .nodeColor(nodeColor)
+        .cameraPosition({
+          z: iter * zDist,
+        });
+
+      // Camera orbit.
+      let angle = 0;
+      setInterval(() => {
+        Graph.cameraPosition({
+          x: iter * zDist * Math.sin(angle),
+          z: iter * zDist * Math.cos(angle),
+        });
+        angle += Math.PI / 300;
+      }, 10);
+
+      setTimeout(step, step_ms);
+      Graph.graphData(getGraph());
+    </script>
+  </body>
+</html>
