@@ -64,22 +64,23 @@
         const sources = Object.keys(g);
 
         const r = {};
+
         for (let i = 0; i < sources.length; i++) {
           const x = sources[i];
           const targets = g[x];
-          if (targets.length == 2) {
+          if (targets.length === 2) {
             // Shift first node off targets.
             const y = g[x].shift();
             const z = g[x];
 
             // Create new targets if new relationship.
-            if (r[x] == undefined) {
+            if (r[x] === undefined) {
               r[x] = [];
             }
-            if (r[y] == undefined) {
+            if (r[y] === undefined) {
               r[y] = [];
             }
-            if (r[z] == undefined) {
+            if (r[z] === undefined) {
               r[z] = [];
             }
 
@@ -96,7 +97,7 @@
         const rSources = Object.keys(r);
         for (let i = 0; i < rSources.length; i++) {
           const source = rSources[i];
-          if (g[source] == undefined) {
+          if (g[source] === undefined) {
             g[source] = [];
           }
           for (let j = 0; j < r[source].length; j++) {
@@ -117,8 +118,8 @@
 
       const Graph = ForceGraph3D()(document.getElementById("3d-graph"))
         .enableNodeDrag(false)
-        .enableNavigationControls(false)
-        .showNavInfo(false)
+        .enableNavigationControls(true)
+        .showNavInfo(true)
         .linkWidth(linkWidth)
         .linkOpacity(linkOpacity)
         .linkColor(linkColor)
